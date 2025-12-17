@@ -1,15 +1,14 @@
-
 name: CI and Release
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
       - master
 
 permissions:
-  contents: write    # 需要推送分支与 tag
+  contents: write
   checks: write
 
 concurrency:
@@ -20,13 +19,14 @@ jobs:
   test:
     name: Run unit tests
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
@@ -41,50 +41,70 @@ jobs:
         run: dotnet test test/Profile.Tests -c Release --no-build --verbosity normal
 
   release:
-    name: Create release branch and tag
+    name: Build publish and create release branch + tag
     runs-on: ubuntu-latest
     needs: test
     if: >
+      needs.test.result == 'success' &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/master'
+
     steps:
-      - name: Checkout repository (full)
+      - name: Checkout full repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup git user
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
 
-      - name: Compute timestamped names
-        id: names
+      - name: Restore & Build & Publish
+        run: |
+          dotnet restore src/Profile/Profile.csproj
+          dotnet build src/Profile/Profile.csproj -c Release --no-restore
+          dotnet publish src/Profile/Profile.csproj -c Release -o publish --no-build
+
+      - name: Compute timestamp-based version and branch names
+        id: vars
         run: |
           TS=$(date -u +"%Y%m%d%H%M")
           TAG="Profile-${TS}"
           BRANCH="release-${TS}"
           echo "TAG=${TAG}" >> $GITHUB_ENV
           echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TS}" >> $GITHUB_OUTPUT
 
-      - name: Create and push release branch
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create orphan release branch containing only publish output
         env:
           BRANCH: ${{ env.BRANCH }}
         run: |
-          # create branch pointing at current commit and push it
-          git checkout -b "$BRANCH"
-          git push origin "$BRANCH" --set-upstream
+          # create orphan branch
+          git checkout --orphan "$BRANCH"
+          # remove all files from index and working tree
+          git rm -rf . || true
+          # copy publish output into repo root
+          cp -r publish/* . || true
+          # ensure no stray files
+          git add -A
+          git commit -m "Release $BRANCH" || (echo "No files to commit" && exit 1)
+          git push origin "$BRANCH" --force
 
       - name: Create tag and push
         env:
           TAG: ${{ env.TAG }}
         run: |
-          git tag "$TAG"
-          git push origin "$TAG"
+          git tag "${TAG}"
+          git push origin "${TAG}"
 
-      - name: Output release info
-        run: |
-          echo "Created branch: ${{ env.BRANCH }}"
-          echo "Created tag: ${{ env.TAG }}"
+      - name: Upload publish artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-${{ env.TAG }}
+          path: publish
