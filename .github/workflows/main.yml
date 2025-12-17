@@ -51,6 +51,10 @@ jobs:
       github.event_name == 'push' &&
       github.ref == 'refs/heads/master'
 
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Checkout repository (full)
         uses: actions/checkout@v4
