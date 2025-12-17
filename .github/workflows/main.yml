@@ -103,8 +103,7 @@ jobs:
           path: publish_output
           
       - name: Goto publish folder
-        run: |
-          cd: ./publish_output/wwwroot
+        run: cd ./publish_output/wwwroot
           
       - name: Deploy to GitHub Pages
         id: deployment
