@@ -99,3 +99,10 @@ jobs:
         with:
           name: publish-artifact
           path: publish_output
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: publish project
+        run: dotnet publish_output/Profile.dll --urls="http://*:80"
