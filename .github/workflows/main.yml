@@ -100,21 +100,16 @@ jobs:
           # force push release branch (overwrite remote release branch)
           git push origin $BRANCH --force
 
-      - name: Echo pwd1
-        run: echo $PWD
-
       - name: Upload GitHub Pages artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages  # 必须是这个名称，deploy-pages 会识别
           path: ./publish_output/wwwroot  # 直接指定静态文件目录，无需 cd
           retention-days: 1  # 可选：缩短 artifact 保留时间
-
-      - name: Echo pwd2
-        run: echo $PWD
       
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          target-folder: ./publish_output/wwwroot
+          folder: ./publish_output/wwwroot
+          branch: gh-pages
