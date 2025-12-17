@@ -10,6 +10,8 @@ on:
 permissions:
   contents: write
   checks: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: ci-release-${{ github.ref }}
