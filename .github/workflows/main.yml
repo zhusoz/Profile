@@ -1,4 +1,4 @@
-name: CI and Release
+name: CI & Release
 
 on:
   pull_request:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -41,7 +41,7 @@ jobs:
         run: dotnet test test/Profile.Tests -c Release --no-build --verbosity normal
 
   release:
-    name: Build publish and create release branch + tag
+    name: Build and publish to release branch
     runs-on: ubuntu-latest
     needs: test
     if: >
@@ -50,10 +50,11 @@ jobs:
       github.ref == 'refs/heads/master'
 
     steps:
-      - name: Checkout full repo
+      - name: Checkout repository (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
@@ -64,47 +65,37 @@ jobs:
         run: |
           dotnet restore src/Profile/Profile.csproj
           dotnet build src/Profile/Profile.csproj -c Release --no-restore
-          dotnet publish src/Profile/Profile.csproj -c Release -o publish --no-build
+          dotnet publish src/Profile/Profile.csproj -c Release -o publish_output --no-build
 
-      - name: Compute timestamp-based version and branch names
-        id: vars
-        run: |
-          TS=$(date -u +"%Y%m%d%H%M")
-          TAG="Profile-${TS}"
-          BRANCH="release-${TS}"
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
-          echo "timestamp=${TS}" >> $GITHUB_OUTPUT
-
-      - name: Configure git
+      - name: Configure git user
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Create orphan release branch containing only publish output
+      - name: Create or overwrite release branch with publish output
         env:
-          BRANCH: ${{ env.BRANCH }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # create orphan branch
-          git checkout --orphan "$BRANCH"
+          set -e
+          BRANCH=release
+          # create orphan branch or reset existing release branch
+          if git show-ref --quiet refs/heads/$BRANCH; then
+            # if local branch exists, delete it to recreate orphan
+            git branch -D $BRANCH || true
+          fi
+          git checkout --orphan $BRANCH
           # remove all files from index and working tree
           git rm -rf . || true
           # copy publish output into repo root
-          cp -r publish/* . || true
-          # ensure no stray files
+          cp -r publish_output/* .
+          # ensure there is something to commit
           git add -A
-          git commit -m "Release $BRANCH" || (echo "No files to commit" && exit 1)
-          git push origin "$BRANCH" --force
+          git commit -m "Release: publish artifacts from $GITHUB_SHA" || (echo "No files to commit" && exit 1)
+          # force push release branch (overwrite remote release branch)
+          git push origin $BRANCH --force
 
-      - name: Create tag and push
-        env:
-          TAG: ${{ env.TAG }}
-        run: |
-          git tag "${TAG}"
-          git push origin "${TAG}"
-
-      - name: Upload publish artifact (optional)
+      - name: (Optional) Upload publish artifact
         uses: actions/upload-artifact@v4
         with:
-          name: publish-${{ env.TAG }}
-          path: publish
+          name: publish-artifact
+          path: publish_output
