@@ -49,13 +49,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
           
       - name: Run project
-        run: dotnet publish_output/profile.dll --urls='http://*:80'
+        run: dotnet ./publish_output/profile.dll --urls='http://*:80'
         
       
