@@ -12,10 +12,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Profile\Profile.csproj" />
+    <ProjectReference Include="..\\..\\src\\Profile\\Profile.csproj" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Xunit;
 
 namespace Profile.Tests
@@ -13,7 +14,7 @@ namespace Profile.Tests
             // Use solution relative content root so the factory can locate wwwroot
             _factory = factory.WithWebHostBuilder(builder =>
             {
-                builder.UseSolutionRelativeContentRoot("Profile");
+                builder.UseSolutionRelativeContentRoot("src/Profile");
             });
         }
 
@@ -39,7 +40,7 @@ namespace Profile.Tests
             Assert.Contains("text/html", contentType);
 
             var content = await response.Content.ReadAsStringAsync();
-            Assert.Contains("<!DOCTYPE html", content, System.StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("<!DOCTYPE html", content, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

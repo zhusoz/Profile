@@ -12,11 +12,11 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Profile/Profile.csproj", "Profile/"]
-RUN dotnet restore "./Profile/Profile.csproj"
-COPY . .
+#COPY ["Profile/Profile.csproj", "Profile/"]
+COPY . Profile/
 WORKDIR "/src/Profile"
-RUN dotnet build "./Profile.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet restore "Profile.csproj"
+RUN dotnet build "Profile.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # 此阶段用于发布要复制到最终阶段的服务项目
 FROM build AS publish
