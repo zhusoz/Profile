@@ -1,0 +1,7 @@
+/home/runner/work/Profile/Profile/publish_output/Profile
+/home/runner/work/Profile/Profile/publish_output/appsettings.Development.json
+/home/runner/work/Profile/Profile/publish_output/appsettings.json
+/home/runner/work/Profile/Profile/publish_output/Profile.dll
+/home/runner/work/Profile/Profile/publish_output/Profile.deps.json
+/home/runner/work/Profile/Profile/publish_output/Profile.runtimeconfig.json
+/home/runner/work/Profile/Profile/publish_output/Profile.pdb

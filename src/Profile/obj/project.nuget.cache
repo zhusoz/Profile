@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "QPhob5jUBIM=",
+  "success": true,
+  "projectFilePath": "/home/runner/work/Profile/Profile/src/Profile/Profile.csproj",
+  "expectedPackageFiles": [
+    "/home/runner/.nuget/packages/microsoft.visualstudio.azure.containers.tools.targets/1.22.1/microsoft.visualstudio.azure.containers.tools.targets.1.22.1.nupkg.sha512"
+  ],
+  "logs": []
+}
